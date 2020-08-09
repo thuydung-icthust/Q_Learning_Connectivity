@@ -50,7 +50,7 @@ class Network:
                 if index not in request_id and (t - node.check_point[-1]["time"]) > 50:
                     node.set_check_point(t)
         if optimizer:
-            self.mc.run(network=self, time_stem=t, net=self, optimizer=optimizer)
+            self.mc.run(network=self, time_stem=t, optimizer=optimizer)
         return state
 
     def simulate_lifetime(self, optimizer, file_name="log/energy_log.csv"):
