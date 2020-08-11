@@ -53,14 +53,16 @@ class Network:
             self.mc.run(network=self, time_stem=t, optimizer=optimizer)
         return state
 
-    def simulate_lifetime(self, optimizer, file_name="log/energy_log.csv"):
-        energy_log = open(file_name, "w")
+    def simulate_lifetime(self, optimizer, index, file_name="log/energy_log.csv"):
+        filename = "log/qlearning_output" + str(index)
+        energy_log = open(file_name, "a+")
         writer = csv.DictWriter(energy_log, fieldnames=["time", "mc energy", "min energy"])
         writer.writeheader()
         t = 0
         while self.node[self.find_min_node()].energy >= 0:
             t = t + 1
-            print(t, self.mc.current, self.node[self.find_min_node()].energy)
+            if t % 100 == 0:
+                print(t, self.mc.current, self.node[self.find_min_node()].energy)
             state = self.run_per_second(t, optimizer)
             if not (t - 1) % 50:
                 writer.writerow(
@@ -68,8 +70,10 @@ class Network:
         writer.writerow({"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
         energy_log.close()
 
-    def simulate_max_time(self, optimizer, max_time=10000, file_name="log/information_log.csv"):
-        information_log = open(file_name, "w")
+    def simulate_max_time(self, optimizer, index, max_time=10000, file_name="log/information_log.csv"):
+        file_name = "log/information_log" + str(index) +".csv"
+        filenametxt = "log/networkinfor" + str(index) +".txt"
+        information_log = open(file_name, "a+")
         writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package"])
         writer.writeheader()
         nb_dead = 0
@@ -77,21 +81,28 @@ class Network:
         t = 0
         while t <= max_time:
             t += 1
-            print(t, self.mc.current, self.node[self.find_min_node()].energy)
+            if t % 100 == 0:
+                print(t, self.mc.current, self.node[self.find_min_node()].energy)
+                data = str([t, nb_dead, nb_package]) + "\n"
+                with open(filenametxt, "a+") as f:
+                    f.write(data)
+
+                writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
+                # writer.writerow(data)
             state = self.run_per_second(t, optimizer)
             current_dead = self.count_dead_node()
             current_package = self.count_package()
             if current_dead != nb_dead or current_package != nb_package:
                 nb_dead = current_dead
                 nb_package = current_package
-                writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
+
         information_log.close()
 
-    def simulate(self, optimizer, max_time=None, file_name="log/energy_log.csv"):
+    def simulate(self, optimizer, index,  max_time=None, file_name="log/energy_log.csv"):
         if max_time:
-            self.simulate_max_time(optimizer=optimizer, max_time=max_time, file_name=file_name)
+            self.simulate_max_time(optimizer=optimizer, index=index, max_time=max_time, file_name=file_name)
         else:
-            self.simulate_lifetime(optimizer=optimizer, file_name=file_name)
+            self.simulate_lifetime(optimizer=optimizer, index = index, file_name=file_name)
 
     def print_net(self, func=to_string):
         func(self)

@@ -41,7 +41,7 @@ class Q_learning:
             first[index] = temp[0]
             second[index] = temp[1]
             # third[index] = temp[2]
-            self.charging_time[index] = temp[3]
+            self.charging_time[index] = temp[2]
         first = first / np.sum(first)
         second = second / np.sum(second)
         # third = third / np.sum(third)
