@@ -37,6 +37,8 @@ class Node:
         self.used_energy = 0.0
 
     def charge(self, mc):
+        if not self.is_active:
+            return 0
         if self.energy <= self.energy_max - 10 ** -5 and mc.is_stand and self.is_active:
             d = distance.euclidean(self.location, mc.current)
             p_theory = para.alpha / (d + para.beta) ** 2
@@ -49,6 +51,8 @@ class Node:
     def send(self, net=None, package=None, receiver=find_receiver, is_energy_info=False):
         d0 = math.sqrt(para.EFS / para.EMP)
         package.update_path(self.id)
+        if not self.is_active:
+            return
         if distance.euclidean(self.location, para.base) > self.com_ran:
             receiver_id = receiver(self, net)
             if receiver_id != -1:
