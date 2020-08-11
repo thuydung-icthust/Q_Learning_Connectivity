@@ -83,7 +83,7 @@ class Network:
             t += 1
             if t % 100 == 0:
                 print(t, self.mc.current, self.node[self.find_min_node()].energy)
-                data = str([t, nb_dead, nb_package]) + "\n"
+                data = str([t, nb_dead, nb_package, self.mc.current, self.node[self.find_min_node()].energy]) + "\n"
                 with open(filenametxt, "a+") as f:
                     f.write(data)
 
