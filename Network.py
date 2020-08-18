@@ -71,8 +71,8 @@ class Network:
         energy_log.close()
 
     def simulate_max_time(self, optimizer, index, max_time=10000, file_name="log/information_log.csv"):
-        file_name = "log/information_log" + str(index) +".csv"
-        filenametxt = "log/networkinfor" + str(index) +".txt"
+        file_name = "log/Qlearning2/information_log" + str(index) +".csv"
+        filenametxt = "log/Qlearning2/networkinfor" + str(index) +".txt"
         information_log = open(file_name, "a+")
         writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package"])
         writer.writeheader()
@@ -81,6 +81,8 @@ class Network:
         t = 0
         while t <= max_time:
             t += 1
+            for node in self.node:
+                node.check_active(self)
             if t % 100 == 0:
                 print(t, self.mc.current, self.node[self.find_min_node()].energy)
                 data = str([t, nb_dead, nb_package, self.mc.current, self.node[self.find_min_node()].energy]) + "\n"
@@ -111,6 +113,8 @@ class Network:
         min_energy = 10 ** 10
         min_id = -1
         for node in self.node:
+            if not node.is_active:
+                continue
             if node.energy < min_energy:
                 min_energy = node.energy
                 min_id = node.id
@@ -119,7 +123,7 @@ class Network:
     def count_dead_node(self):
         count = 0
         for node in self.node:
-            if node.energy < 0:
+            if node.energy < node.min_energy:
                 count += 1
         return count
 

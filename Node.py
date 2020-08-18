@@ -24,6 +24,7 @@ class Node:
         self.is_active = is_active  # statement of sensor. If sensor dead, state is False
         self.is_request = False  # if node requested, is_request = True
         self.level = 0  # the distance from node to base
+        self.min_energy = 0.02
 
     def set_average_energy(self, func=estimate_average_energy):
         self.avg_energy = func(self)
@@ -76,7 +77,7 @@ class Node:
         self.used_energy += para.ER * package.size
 
     def check_active(self, net):
-        if self.energy < 0 or len(self.neighbor) == 0:
+        if self.energy < self.min_energy or len(self.neighbor) == 0:
             self.is_active = False
         else:
             a = [1 for neighbor in self.neighbor if net.node[neighbor].is_active]
