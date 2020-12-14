@@ -14,9 +14,9 @@ def get_location(mc):
         if (mc.end[0] - mc.current[0]) * (mc.end[0] - x_hat) < 0 or (
                 (mc.end[0] - mc.current[0]) * (mc.end[0] - x_hat) == 0 and (mc.end[1] - mc.current[1]) * (
                 mc.end[1] - y_hat) <= 0):
-            return mc.end
+            return int(mc.end[0]), int(mc.end[1])
         else:
-            return x_hat, y_hat
+            return int(x_hat), int(y_hat)
 
 
 def charging(mc, net, node):

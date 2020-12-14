@@ -36,11 +36,11 @@ class Network:
     def communicate(self, communicate_func=uniform_com_func):
         return communicate_func(self)
 
-    def run_per_second(self, t, optimizer):
+    def run_per_second(self, t, optimizer, index_f):
         state = self.communicate()
         request_id = []
         for index, node in enumerate(self.node):
-            if node.energy < node.energy_thresh:
+            if node.energy < node.energy_thresh and node.is_active:
                 node.request(mc=self.mc, t=t)
                 request_id.append(index)
             else:
@@ -50,7 +50,7 @@ class Network:
                 if index not in request_id and (t - node.check_point[-1]["time"]) > 50:
                     node.set_check_point(t)
         if optimizer:
-            self.mc.run(network=self, time_stem=t, optimizer=optimizer)
+            self.mc.run(network=self, time_stem=t, optimizer=optimizer, index_f=index_f)
         return state
 
     def simulate_lifetime(self, optimizer, index, file_name="log/energy_log.csv"):
@@ -73,16 +73,16 @@ class Network:
     def simulate_max_time(self, optimizer, index, max_time=10000, file_name="log/information_log.csv"):
         file_name = "log/DiscreteQ/information_log" + str(index) +".csv"
         filenametxt = "log/DiscreteQ/networkinfor" + str(index) +".txt"
-        f = open(file_name, "r+")
-        f.truncate(0)
-        f.close()
-        f = open(filenametxt, "r+")
-        f.truncate(0)
-        f.close()
+        # f = open(file_name, "r+")
+        # f.truncate(0)
+        # f.close()
+        # f = open(filenametxt, "r+")
+        # f.truncate(0)
+        # f.close()
         information_log = open(file_name, "a+")
         writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package"])
         writer.writeheader()
-        nb_dead = 0
+        nb_dead = self.count_dead_node()
         nb_package = len(self.target)
         t = 0
 
@@ -92,13 +92,13 @@ class Network:
                 node.check_active(self)
             if t % 100 == 0:
                 print(t, self.mc.current, self.node[self.find_min_node()].energy)
-                data = str([t, nb_dead, nb_package, self.mc.current, self.node[self.find_min_node()].energy]) + "\n"
+                data = str([t, nb_dead, nb_package, self.mc.energy, self.mc.current, self.node[self.find_min_node()].energy]) + "\n"
                 with open(filenametxt, "a+") as f:
                     f.write(data)
 
                 writer.writerow({"time": t, "nb dead": nb_dead, "nb package": nb_package})
                 # writer.writerow(data)
-            state = self.run_per_second(t, optimizer)
+            state = self.run_per_second(t, optimizer, index)
             current_dead = self.count_dead_node()
             current_package = self.count_package()
             if current_dead != nb_dead or current_package != nb_package:

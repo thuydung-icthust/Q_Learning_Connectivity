@@ -36,10 +36,12 @@ class Q_learning:
     def update(
         self,
         network,
+
         alpha=0.5,
         gamma=0.5,
         q_max_func=q_max_function,
         reward_func=reward_function,
+
     ):
         self.update_action_list(network)
         if not len(network.mc.list_request):
@@ -55,8 +57,8 @@ class Q_learning:
             ) / network.mc.e_self_charge
         else:
             charging_time = self.charging_time[self.state]
-        print("next state =", self.action_list[self.state], self.state, charging_time)
-        print(self.charging_time)
+
+        # print(self.charging_time)
         return self.action_list[self.state], charging_time
 
     def update_action_list(self, network):
