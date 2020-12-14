@@ -8,6 +8,7 @@ from Q_learning_method import (
     action_function,
     q_max_function,
     reward_function,
+    discrete_action_function,
 )
 
 
@@ -16,10 +17,10 @@ class Q_learning:
         self,
         init_func=init_function,
         nb_action=81,
-        action_func=action_function,
+        action_func=discrete_action_function,
         network=None,
     ):
-        self.action_list = action_func(nb_action=nb_action)  # the list of action
+        self.action_list = action_func()  # the list of action
         self.q_table = init_func(nb_action=nb_action)  # q table
         self.state = nb_action  # the current state of actor
         self.charging_time = [
@@ -73,9 +74,10 @@ class Q_learning:
             candidates[i].extend(circle_circle_intersection_points[i])
             candidates[i].extend(circle_line_intersection_points[i])
             candidates[i].extend(circle_bound_grid_points[i])
-        action_list = optimal_action_list(candidates, network)
+        action_list = optimal_action_list(candidates, network, self.action_list)
+
         self.action_list = action_list
-        self.action_list.append(para.depot)
+        # self.action_list.append(para.depot)
         
 
     def q_max(self, q_max_func=q_max_function):
@@ -122,8 +124,8 @@ def get_circle_bound_grid(request_list):
         for j in range(0, n_size):
             for node in request_list:
                 x, y, r = (
-                    node.position[0],
-                    node.position[1],
+                    node.location[0],
+                    node.location[1],
                     get_positive_charging_radius(node),
                 )
                 if(isInside(x, y, r, i*n_size, j*n_size)):
@@ -289,7 +291,7 @@ def get_line_intersections(x, y, r, a0, b0, c0):
             b0,
             c0,
         )
-    print(result)
+    # print(result)
     return result
 
 
@@ -319,28 +321,39 @@ def isInside(circle_x, circle_y, rad, x, y):
     # from given point 
     if ((x - circle_x) * (x - circle_x) + 
         (y - circle_y) * (y - circle_y) <= rad * rad): 
-        return True; 
+        return True
     else: 
-        return False; 
+        return False
 
 
-def optimal_action_list(candidates, network):
+def optimal_action_list(candidates, network, initial_action_list):
     node_positions = [[node.location[0], node.location[1]] for node in network.node]
     # node_positions = np.asarray(node_positions)
-    action_list = [[0,0] for i in range (0, len(candidates))] 
+    action_list = [[0,0] for i in range (0, len(candidates)+1)]
     e = [node.avg_energy for node in network.node]
     e = np.asarray(e)
     for ind, actions in enumerate(candidates):
-        evaluations = [[0,0,0,0] for i in range(0, len(actions))]
-        evaluations = np.asarray(evaluations)
-        for j, action in enumerate(actions):
-            dist = [0 for i in range (0, len(node_positions))]
-            dist = [distance(pos, action) for pos in node_positions]
-            dist = np.asarray(dist)
-            N0, total_p = estimate_charging(dist, network, e)
-            evaluations[j] = [N0, total_p, action[0], action[1]]
-        evaluations = evaluations(np.argsort(-evaluations[:,1])) # sort by decreasing total p
-        action_list[ind] = (evaluations[np.argmax(evaluations[:,0])][2], evaluations[np.argmax(evaluations[:,0])][3])
+        if(len(actions) == 0):
+            action_list[ind] = initial_action_list[ind]
+        else:
+            evaluations = [[0.0,0.0,0.0,0.0] for i in range(0, len(actions))]
+            evaluations = np.asarray(evaluations)
+            for j, action in enumerate(actions):
+                dist = [0 for i in range (0, len(node_positions))]
+                # for i, pos in enumerate(node_positions):
+                #     dist[i] = distance(pos, action)
+                dist = [distance.euclidean(pos, action) for pos in node_positions]
+                dist = np.asarray(dist)
+                N0, total_p = estimate_charging(dist, network, e)
+                evaluations[j][0] = N0
+                evaluations[j][1] = total_p
+                evaluations[j][2] = action[0]
+                evaluations[j][3] = action[1]
+            minus_eval = - evaluations
+            if len(evaluations) > 1:
+                evaluations = evaluations[np.argsort(minus_eval[:,1])] # sort by decreasing total p
+            action_list[ind] = (int(evaluations[np.argmax(evaluations[:,0])][2]), int(evaluations[np.argmax(evaluations[:,0])][3]))
+            action_list[81] = initial_action_list[81]
     return action_list
 
 
@@ -348,4 +361,4 @@ def estimate_charging(dist, network, e):
     p = para.alpha/((dist+para.beta)**2)
     total_p = sum(p)
     N0 = np.count_nonzero(p>e)
-    return N0, p
+    return N0, total_p

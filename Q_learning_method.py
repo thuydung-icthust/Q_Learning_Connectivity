@@ -29,15 +29,26 @@ def init_function(nb_action=81):
     return np.zeros((nb_action + 1, nb_action + 1), dtype=float)
 
 
-def action_function(nb_action=82):
+def action_function(nb_action=81):
     list_action = []
     for i in range(int(math.sqrt(nb_action))):
         for j in range(int(math.sqrt(nb_action))):
             list_action.append((100 * (i + 1), 100 * (j + 1)))
     list_action.append(para.depot)
+    # print(list_action)
     return list_action
 
-# def discrete_action_function(nb_action=82):
+def discrete_action_function(nb_action=82):
+    list_action = []
+    n_size = para.n_size
+    unit_x = (para.x_bound[1] - para.x_bound[0]) / n_size
+    unit_y = (para.y_bound[1] - para.y_bound[0]) / n_size
+    for i in range(0, para.n_size):
+        for j in range(0, para.n_size):
+            list_action.append((int(unit_x*i+unit_x/2), int(unit_y*j+ unit_y/2)))
+    list_action.append(para.depot)
+    # print(list_action)
+    return list_action
 
 
 # def action_function(network):

@@ -71,14 +71,21 @@ class Network:
         energy_log.close()
 
     def simulate_max_time(self, optimizer, index, max_time=10000, file_name="log/information_log.csv"):
-        file_name = "log/Qlearning2/information_log" + str(index) +".csv"
-        filenametxt = "log/Qlearning2/networkinfor" + str(index) +".txt"
+        file_name = "log/DiscreteQ/information_log" + str(index) +".csv"
+        filenametxt = "log/DiscreteQ/networkinfor" + str(index) +".txt"
+        f = open(file_name, "r+")
+        f.truncate(0)
+        f.close()
+        f = open(filenametxt, "r+")
+        f.truncate(0)
+        f.close()
         information_log = open(file_name, "a+")
         writer = csv.DictWriter(information_log, fieldnames=["time", "nb dead", "nb package"])
         writer.writeheader()
         nb_dead = 0
         nb_package = len(self.target)
         t = 0
+
         while t <= max_time:
             t += 1
             for node in self.node:
