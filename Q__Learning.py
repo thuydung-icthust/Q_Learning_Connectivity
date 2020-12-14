@@ -40,6 +40,7 @@ class Q_learning:
         q_max_func=q_max_function,
         reward_func=reward_function,
     ):
+        self.update_action_list(network)
         if not len(network.mc.list_request):
             return self.action_list[self.state], 0.0
         self.set_reward(reward_func=reward_func, network=network)
@@ -170,8 +171,8 @@ def get_circle_line_intersection(request_list):
         y = i * unit_y
         for node in request_list:
             intersections = get_line_intersections(
-                node.position[0],
-                node.position[1],
+                node.location[0],
+                node.location[1],
                 get_positive_charging_radius(node),
                 0,
                 1,
@@ -190,8 +191,8 @@ def get_circle_line_intersection(request_list):
         x = i * unit_x
         for node in request_list:
             intersections = get_line_intersections(
-                node.position[0],
-                node.position[1],
+                node.location[0],
+                node.location[1],
                 get_positive_charging_radius(node),
                 1,
                 0,
@@ -242,6 +243,8 @@ def solveQuad(a, b, c, a0, b0, c0):
     # print(a,b,c)
     result = []
     d = b ** 2 - 4 * a * c
+    if(d1 < 0):
+        return result
     d1 = sqrt(d)
     # print(d1)
     if d < 0:
@@ -322,7 +325,7 @@ def isInside(circle_x, circle_y, rad, x, y):
 
 
 def optimal_action_list(candidates, network):
-    node_positions = [[node.position[0], node.position[1]] for node in network.node]
+    node_positions = [[node.location[0], node.location[1]] for node in network.node]
     # node_positions = np.asarray(node_positions)
     action_list = [[0,0] for i in range (0, len(candidates))] 
     e = [node.avg_energy for node in network.node]

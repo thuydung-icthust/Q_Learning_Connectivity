@@ -37,7 +37,7 @@ def action_function(nb_action=82):
     list_action.append(para.depot)
     return list_action
 
-def discrete_action_function(nb_action=82):
+# def discrete_action_function(nb_action=82):
 
 
 # def action_function(network):
