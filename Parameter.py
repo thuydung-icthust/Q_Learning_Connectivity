@@ -10,3 +10,6 @@ EFS = 0.00000000001
 EMP = 0.0000000000000013
 prob = 1.0
 E_mc_thresh = 10
+n_size = 9
+x_bound = [0, 1000]
+y_bound = [0, 1000]
