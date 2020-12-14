@@ -243,7 +243,7 @@ def solveQuad(a, b, c, a0, b0, c0):
     # print(a,b,c)
     result = []
     d = b ** 2 - 4 * a * c
-    if(d1 < 0):
+    if(d < 0):
         return result
     d1 = sqrt(d)
     # print(d1)
