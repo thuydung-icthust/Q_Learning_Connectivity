@@ -51,6 +51,7 @@ class MobileCharger:
         data = str([self.energy, self.current, next_location, charging_time])
         with open(f_name, "a+") as f:
             f.write(data)
+            f.write("\n")
         # print("next state =", self.action_list[self.state], self.state, charging_time)
         self.start = self.current
         next_p = (int(next_location[0]), int(next_location[1]))

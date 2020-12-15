@@ -37,7 +37,7 @@ class Q_learning:
         self,
         network,
 
-        alpha=0.5,
+        alpha=0.2,
         gamma=0.5,
         q_max_func=q_max_function,
         reward_func=reward_function,
@@ -59,7 +59,7 @@ class Q_learning:
             charging_time = self.charging_time[self.state]
 
         # print(self.charging_time)
-        return self.action_list[self.state], charging_time
+        return self.action_list[self.state], int(charging_time)
 
     def update_action_list(self, network):
         request_list = []
@@ -146,11 +146,11 @@ def get_circle_circle_intersection(request_list):
             node1 = request_list[i]
             node2 = request_list[j]
             intersections = get_circle_intersections(
-                node1.position[0],
-                node1.position[1],
+                node1.location[0],
+                node1.location[1],
                 get_positive_charging_radius(node1),
-                node2.position[0],
-                node2.position[1],
+                node2.location[0],
+                node2.location[1],
                 get_positive_charging_radius(node2),
             )
             if intersections is not None:

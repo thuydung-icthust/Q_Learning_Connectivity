@@ -13,7 +13,7 @@ class Node:
         self.sen_ran = sen_ran  # sensing range
         self.energy = energy  # energy of sensor
         self.energy_max = energy_max  # capacity of sensor
-        self.energy_thresh = 9 # threshold to sensor send request for mc
+        self.energy_thresh = energy_thresh # threshold to sensor send request for mc
         self.prob = prob  # probability of sending data
         self.check_point = [{"E_current": self.energy, "time": 0, "avg_e": 0.0}]  # check point of information of sensor
         self.used_energy = 0.0  # energy was used from last check point to now
