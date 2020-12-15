@@ -27,4 +27,4 @@ for index in range(0,6):
     print(len(net.node), len(net.target), max(net.target))
     q_learning = Q_learning(network=net)
     inma = Inma()
-    net.simulate(optimizer=q_learning, index= index, max_time=200000, file_name="log/Qlearning/q_learning_information_log.csv")
+    net.simulate(optimizer=q_learning, index= index, file_name="log/Qlearning/q_learning_information_log.csv")

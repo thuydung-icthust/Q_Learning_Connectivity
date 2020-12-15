@@ -54,8 +54,9 @@ class Network:
         return state
 
     def simulate_lifetime(self, optimizer, index, file_name="log/energy_log.csv"):
-        filename = "log/qlearning_output" + str(index)
-        energy_log = open(file_name, "a+")
+        filename = "log/Lifetime/qlearning_output" + str(index)
+        filename_txt = "log/Lifetime/qlearning_output_" + str(index) +".txt"
+        energy_log = open(filename, "a+")
         writer = csv.DictWriter(energy_log, fieldnames=["time", "mc energy", "min energy"])
         writer.writeheader()
         t = 0
@@ -63,10 +64,18 @@ class Network:
             t = t + 1
             if t % 100 == 0:
                 print(t, self.mc.current, self.node[self.find_min_node()].energy)
-            state = self.run_per_second(t, optimizer)
+                current_package = self.count_package()
+                if current_package != nb_package:
+                    nb_package = current_package
+                data = str([t, nb_package, self.mc.energy, self.mc.current,
+                            self.node[self.find_min_node()].energy]) + "\n"
+                with open(filename_txt, "a+") as f:
+                    f.write(data)
+            state = self.run_per_second(t, optimizer, index)
             if not (t - 1) % 50:
                 writer.writerow(
                     {"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
+
         writer.writerow({"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
         energy_log.close()
 
