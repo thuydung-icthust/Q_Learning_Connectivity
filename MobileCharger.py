@@ -47,7 +47,7 @@ class MobileCharger:
 
     def get_next_location(self, network, time_stem, index_f, optimizer=None):
         next_location, charging_time = optimizer.update(network)
-        f_name = "log/DiscreteQ/MC_avtivity_" + str(index_f) + ".txt"
+        f_name = "log/Lifetime/Q_Charge/alpha_0.2/MC_avtivity_" + str(index_f) + ".txt"
         data = str([self.energy, self.current, next_location, charging_time])
         with open(f_name, "a+") as f:
             f.write(data)

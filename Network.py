@@ -54,20 +54,31 @@ class Network:
         return state
 
     def simulate_lifetime(self, optimizer, index, file_name="log/energy_log.csv"):
-        filename = "log/Lifetime/qlearning_output" + str(index)
-        filename_txt = "log/Lifetime/qlearning_output_" + str(index) +".txt"
+        filename = "log/Lifetime/Q_Charge/alpha_0.2/Q_output_" + str(index) + ".csv"
+        filename_txt = "log/Lifetime/Q_Charge/alpha_0.2/Q_output_" + str(index) +".txt"
         energy_log = open(filename, "a+")
         writer = csv.DictWriter(energy_log, fieldnames=["time", "mc energy", "min energy"])
         writer.writeheader()
+        nb_package = len(self.target)
+
         t = 0
         while self.node[self.find_min_node()].energy >= 0:
+            for node in self.node:
+                node.check_active(self)
+            nb_dead = self.count_dead_node()
+            if(nb_dead > 0):
+                data = str([t, nb_dead , nb_package, self.mc.energy, self.mc.current,
+                            self.node[self.find_min_node()].energy]) + "\n"
+                with open(filename_txt, "a+") as f:
+                    f.write(data)
+                break
             t = t + 1
             if t % 100 == 0:
                 print(t, self.mc.current, self.node[self.find_min_node()].energy)
                 current_package = self.count_package()
                 if current_package != nb_package:
                     nb_package = current_package
-                data = str([t, nb_package, self.mc.energy, self.mc.current,
+                data = str([t, nb_dead, nb_package, self.mc.energy, self.mc.current,
                             self.node[self.find_min_node()].energy]) + "\n"
                 with open(filename_txt, "a+") as f:
                     f.write(data)

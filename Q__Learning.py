@@ -37,7 +37,7 @@ class Q_learning:
         self,
         network,
 
-        alpha=0.2,
+        alpha=0.5,
         gamma=0.5,
         q_max_func=q_max_function,
         reward_func=reward_function,
