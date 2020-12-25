@@ -7,7 +7,7 @@ from MobileCharger import MobileCharger
 from Q__Learning import Q_learning
 from Inma import Inma
 
-for index in range(0,6):
+for index in range(0,5):
     df = pd.read_csv("data/thaydoitileguitin.csv")
     node_pos = list(literal_eval(df.node_pos[index]))
     list_node = []
@@ -27,4 +27,4 @@ for index in range(0,6):
     print(len(net.node), len(net.target), max(net.target))
     q_learning = Q_learning(network=net)
     inma = Inma()
-    net.simulate(optimizer=q_learning, index= index, file_name="log/Qlearning/q_learning_information_log.csv")
+    net.simulate(optimizer= q_learning, index= index, file_name="log/Lifetime/Q_Charge/")

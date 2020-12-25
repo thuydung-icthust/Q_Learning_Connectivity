@@ -37,7 +37,7 @@ class Q_learning:
         self,
         network,
 
-        alpha=0.5,
+        alpha=0.2,
         gamma=0.5,
         q_max_func=q_max_function,
         reward_func=reward_function,
@@ -299,6 +299,8 @@ def get_line_intersections(x, y, r, a0, b0, c0):
 
 def get_positive_charging_radius(node):
     e = node.avg_energy
+    if e == 0 :
+        return 100
     return max(0, sqrt(para.alpha / e) - para.beta)
 
 
@@ -362,5 +364,6 @@ def optimal_action_list(candidates, network, initial_action_list):
 def estimate_charging(dist, network, e):
     p = para.alpha/((dist+para.beta)**2)
     total_p = sum(p)
+
     N0 = np.count_nonzero(p>e)
     return N0, total_p

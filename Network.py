@@ -36,7 +36,7 @@ class Network:
     def communicate(self, communicate_func=uniform_com_func):
         return communicate_func(self)
 
-    def run_per_second(self, t, optimizer, index_f):
+    def run_per_second(self, t, optimizer, index_f, file_name):
         state = self.communicate()
         request_id = []
         for index, node in enumerate(self.node):
@@ -50,25 +50,33 @@ class Network:
                 if index not in request_id and (t - node.check_point[-1]["time"]) > 50:
                     node.set_check_point(t)
         if optimizer:
-            self.mc.run(network=self, time_stem=t, optimizer=optimizer, index_f=index_f)
+            self.mc.run(network=self, time_stem=t, optimizer=optimizer, index_f=index_f, file_name = file_name)
         return state
 
     def simulate_lifetime(self, optimizer, index, file_name="log/energy_log.csv"):
-        filename = "log/Lifetime/Q_Charge/alpha_0.2/Q_output_" + str(index) + ".csv"
-        filename_txt = "log/Lifetime/Q_Charge/alpha_0.2/Q_output_" + str(index) +".txt"
-        energy_log = open(filename, "a+")
-        writer = csv.DictWriter(energy_log, fieldnames=["time", "mc energy", "min energy"])
-        writer.writeheader()
+        # filename = "log/Lifetime/INMA/INMA_output_" + str(index) + ".csv"
+        # filename_txt = "log/Lifetime/INMA/INMA_output_" + str(index) +".txt"
+        filename_txt = file_name + "output_"+ str(index) + ".txt"
+        # energy_log = open(filename, "a+")
+        # writer = csv.DictWriter(energy_log, fieldnames=["time", "mc energy", "min energy"])
+        # writer.writeheader()
         nb_package = len(self.target)
 
         t = 0
+        cnt_dead = 0
         while self.node[self.find_min_node()].energy >= 0:
             for node in self.node:
                 node.check_active(self)
             nb_dead = self.count_dead_node()
-            if(nb_dead > 0):
+            if nb_dead > cnt_dead:
+                data = str([t, nb_dead, nb_package, self.mc.energy, self.mc.current,
+                            self.node[self.find_min_node()].energy, self.avg_energy()]) + "\n"
+                with open(filename_txt, "a+") as f:
+                    f.write(data)
+                cnt_dead = nb_dead
+            if(nb_dead >= 0.1 * (len(self.node))):
                 data = str([t, nb_dead , nb_package, self.mc.energy, self.mc.current,
-                            self.node[self.find_min_node()].energy]) + "\n"
+                            self.node[self.find_min_node()].energy, self.avg_energy()]) + "\n"
                 with open(filename_txt, "a+") as f:
                     f.write(data)
                 break
@@ -79,16 +87,16 @@ class Network:
                 if current_package != nb_package:
                     nb_package = current_package
                 data = str([t, nb_dead, nb_package, self.mc.energy, self.mc.current,
-                            self.node[self.find_min_node()].energy]) + "\n"
+                            self.node[self.find_min_node()].energy, self.avg_energy()]) + "\n"
                 with open(filename_txt, "a+") as f:
                     f.write(data)
-            state = self.run_per_second(t, optimizer, index)
-            if not (t - 1) % 50:
-                writer.writerow(
-                    {"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
-
-        writer.writerow({"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
-        energy_log.close()
+            state = self.run_per_second(t, optimizer, index, file_name)
+        #     if not (t - 1) % 50:
+        #         writer.writerow(
+        #             {"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
+        #
+        # writer.writerow({"time": t, "mc energy": self.mc.energy, "min energy": self.node[self.find_min_node()].energy})
+        # energy_log.close()
 
     def simulate_max_time(self, optimizer, index, max_time=10000, file_name="log/information_log.csv"):
         file_name = "log/DiscreteQ/information_log" + str(index) +".csv"
@@ -132,7 +140,35 @@ class Network:
             self.simulate_max_time(optimizer=optimizer, index=index, max_time=max_time, file_name=file_name)
         else:
             self.simulate_lifetime(optimizer=optimizer, index = index, file_name=file_name)
+    def sim_no_charge(self, index, optimizer, max_time = None, file_name="log/energy_log.csv"):
+        filename_txt = file_name + "output_" + str(index) + ".txt"
+        # energy_log = open(filename, "a+")
+        # writer = csv.DictWriter(energy_log, fieldnames=["time", "mc energy", "min energy"])
+        # writer.writeheader()
+        nb_package = len(self.target)
 
+        t = 0
+        while self.node[self.find_min_node()].energy >= 0:
+            for node in self.node:
+                node.check_active(self)
+            nb_dead = self.count_dead_node()
+            if (nb_dead > 0):
+                data = str([t, nb_dead, nb_package, self.mc.energy, self.mc.current,
+                            self.node[self.find_min_node()].energy, self.avg_energy()]) + "\n"
+                with open(filename_txt, "a+") as f:
+                    f.write(data)
+                break
+            t = t + 1
+            if t % 100 == 0:
+                print(t, self.mc.current, self.node[self.find_min_node()].energy)
+                current_package = self.count_package()
+                if current_package != nb_package:
+                    nb_package = current_package
+                data = str([t, nb_dead, nb_package, self.mc.energy, self.mc.current,
+                            self.node[self.find_min_node()].energy]) + "\n"
+                with open(filename_txt, "a+") as f:
+                    f.write(data)
+            state = self.run_per_second(t, optimizer, index, file_name)
     def print_net(self, func=to_string):
         func(self)
 
@@ -157,3 +193,9 @@ class Network:
     def count_package(self, count_func=count_package_function):
         count = count_func(self)
         return count
+
+    def avg_energy(self):
+        sum_e = 0.0
+        for nd in self.node:
+            sum_e += nd.avg_energy
+        return sum_e/len(self.node)

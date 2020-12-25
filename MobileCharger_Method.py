@@ -22,5 +22,7 @@ def get_location(mc):
 
 def charging(mc, net, node):
     for nd in net.node:
-        p = nd.charge(mc)
-        mc.energy -= p
+        # for INMA only
+        if(distance.euclidean(nd.location, mc.current)):
+            p = nd.charge(mc)
+            mc.energy -= p
