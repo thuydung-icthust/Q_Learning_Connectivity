@@ -16,12 +16,18 @@ class Q_learning:
     def __init__(
         self,
         init_func=init_function,
-        nb_action=81,
+        nb_action=100,
         action_func=discrete_action_function,
         network=None,
+        alpha_p=0.1,
+        theta_p=0.3,
+        n_size=10,
     ):
-        self.action_list = action_func()  # the list of action
+        self.nb_action = nb_action
+        print(self.nb_action)
+        self.action_list = action_func(nb_action=nb_action+1, n_size=n_size)  # the list of action
         self.q_table = init_func(nb_action=nb_action)  # q table
+        print(len(self.action_list))
         self.state = nb_action  # the current state of actor
         self.charging_time = [
             0.0 for _ in self.action_list
@@ -32,12 +38,17 @@ class Q_learning:
         self.reward_max = [
             0.0 for _ in self.action_list
         ]  # the maximum reward of each action
+        self.alpha_p = alpha_p
+        self.theta_p = theta_p
+        self.n_size = n_size
+        
+        print(self.alpha_p)
+        print(self.theta_p)
 
     def update(
         self,
         network,
-
-        alpha=0.2,
+        alpha=0.1,
         gamma=0.5,
         q_max_func=q_max_function,
         reward_func=reward_function,
@@ -47,7 +58,7 @@ class Q_learning:
         if not len(network.mc.list_request):
             return self.action_list[self.state], 0.0
         self.set_reward(reward_func=reward_func, network=network)
-        self.q_table[self.state] = (1 - alpha) * self.q_table[self.state] + alpha * (
+        self.q_table[self.state] = (1 - self.alpha_p) * self.q_table[self.state] + self.alpha_p * (
             self.reward + gamma * self.q_max(q_max_func)
         )
         self.choose_next_state(network)
@@ -63,22 +74,23 @@ class Q_learning:
 
     def update_action_list(self, network):
         request_list = []
-        n_size = para.n_size
+        n_size = self.n_size
+        print(self.n_size)
         total_cell = n_size * n_size
         candidates = [[] for i in range(0, total_cell)]
         for node in network.node:
             if node.is_request:
                 request_list.append(node)
-        circle_circle_intersection_points = get_circle_circle_intersection(request_list)
-        circle_line_intersection_points = get_circle_line_intersection(request_list)
-        circle_bound_grid_points = get_circle_bound_grid(request_list)
+        circle_circle_intersection_points = get_circle_circle_intersection(request_list, n_size=self.n_size)
+        circle_line_intersection_points = get_circle_line_intersection(request_list, n_size=self.n_size)
+        circle_bound_grid_points = get_circle_bound_grid(request_list, n_size=self.n_size)
         for i in range(0, len(candidates)):
             candidates[i].extend(circle_circle_intersection_points[i])
             candidates[i].extend(circle_line_intersection_points[i])
             candidates[i].extend(circle_bound_grid_points[i])
-        action_list = optimal_action_list(candidates, network, self.action_list)
+        action_list = optimal_action_list(candidates, network, self.action_list, nb_action=self.nb_action)
 
-        self.action_list = action_list
+        self.action_list = action_list.copy()
         # self.action_list.append(para.depot)
         
 
@@ -95,6 +107,8 @@ class Q_learning:
                 q_learning=self,
                 state=index,
                 receive_func=find_receiver,
+                alpha=self.theta_p,
+
             )
             first[index] = temp[0]
             second[index] = temp[1]
@@ -116,8 +130,8 @@ class Q_learning:
             print(self.action_list[self.state])
 
 
-def get_circle_bound_grid(request_list):
-    n_size = para.n_size
+def get_circle_bound_grid(request_list, n_size):
+    # n_size = self.n_size
     total_cell = n_size * n_size
     candidates = [[] for i in range(0, total_cell)]
     unit_x = (para.x_bound[1] - para.x_bound[0]) / n_size
@@ -137,8 +151,8 @@ def get_circle_bound_grid(request_list):
     return candidates
 
 
-def get_circle_circle_intersection(request_list):
-    n_size = para.n_size
+def get_circle_circle_intersection(request_list, n_size):
+    n_size = n_size
     total_cell = n_size * n_size
     candidates = [[] for i in range(0, total_cell)]
     for i in range(0, len(request_list) - 1):
@@ -155,8 +169,8 @@ def get_circle_circle_intersection(request_list):
             )
             if intersections is not None:
                 x1, y1, x2, y2 = intersections
-                cell_num1 = isBelongToCell(x1, y1)
-                cell_num2 = isBelongToCell(x2, y2)
+                cell_num1 = isBelongToCell(x1, y1, n_size=n_size)
+                cell_num2 = isBelongToCell(x2, y2, n_size=n_size)
                 if cell_num1 != -1:
                     candidates[cell_num1].append([x1, y1])
                 if cell_num2 != -1:
@@ -164,8 +178,8 @@ def get_circle_circle_intersection(request_list):
     return candidates
 
 
-def get_circle_line_intersection(request_list):
-    n_size = para.n_size
+def get_circle_line_intersection(request_list, n_size):
+    # n_size = n_size
     total_cell = n_size * n_size
     candidates = [[] for i in range(0, total_cell)]
     unit_x = (para.x_bound[1] - para.x_bound[0]) / n_size
@@ -183,11 +197,11 @@ def get_circle_line_intersection(request_list):
                 -y,
             )
             if len(intersections) >= 1:
-                cell_num = isBelongToCell(intersections[0][0], intersections[0][1])
+                cell_num = isBelongToCell(intersections[0][0], intersections[0][1], n_size=n_size)
                 if cell_num != -1:
                     candidates[cell_num].append(intersections[0])
             if len(intersections) >= 2:
-                cell_num = isBelongToCell(intersections[1][0], intersections[1][1])
+                cell_num = isBelongToCell(intersections[1][0], intersections[1][1], n_size=n_size)
                 if cell_num != -1:
                     candidates[cell_num].append(intersections[1])
     for i in range(0, n_size):
@@ -203,11 +217,11 @@ def get_circle_line_intersection(request_list):
                 -x,
             )
             if len(intersections) >= 1:
-                cell_num = isBelongToCell(intersections[0][0], intersections[0][1])
+                cell_num = isBelongToCell(intersections[0][0], intersections[0][1], n_size=n_size)
                 if cell_num != -1:
                     candidates[cell_num].append(intersections[0])
             if len(intersections) >= 2:
-                cell_num = isBelongToCell(intersections[1][0], intersections[1][1])
+                cell_num = isBelongToCell(intersections[1][0], intersections[1][1], n_size=n_size)
                 if cell_num != -1:
                     candidates[cell_num].append(intersections[1])
 
@@ -304,18 +318,18 @@ def get_positive_charging_radius(node):
     return max(0, sqrt(para.alpha / e) - para.beta)
 
 
-def isBelongToCell(x, y):
+def isBelongToCell(x, y, n_size):
     if (
         x >= para.x_bound[0]
         and x <= para.x_bound[1]
         and y >= para.y_bound[0]
         and y <= para.y_bound[1]
     ):
-        unit_x = (para.x_bound[1] - para.x_bound[0]) / para.n_size
-        unit_y = (para.y_bound[1] - para.y_bound[0]) / para.n_size
+        unit_x = (para.x_bound[1] - para.x_bound[0]) / n_size
+        unit_y = (para.y_bound[1] - para.y_bound[0]) / n_size
         i = int(x / unit_x)
         j = int(y / unit_y)
-        return i * para.n_size + j
+        return i * n_size + j
     return -1
 
 def isInside(circle_x, circle_y, rad, x, y): 
@@ -330,7 +344,7 @@ def isInside(circle_x, circle_y, rad, x, y):
         return False
 
 
-def optimal_action_list(candidates, network, initial_action_list):
+def optimal_action_list(candidates, network, initial_action_list, nb_action):
     node_positions = [[node.location[0], node.location[1]] for node in network.node]
     # node_positions = np.asarray(node_positions)
     action_list = [[0,0] for i in range (0, len(candidates)+1)]
@@ -357,7 +371,7 @@ def optimal_action_list(candidates, network, initial_action_list):
             if len(evaluations) > 1:
                 evaluations = evaluations[np.argsort(minus_eval[:,1])] # sort by decreasing total p
             action_list[ind] = (int(evaluations[np.argmax(evaluations[:,0])][2]), int(evaluations[np.argmax(evaluations[:,0])][3]))
-            action_list[81] = initial_action_list[81]
+            action_list[nb_action] = initial_action_list[nb_action]
     return action_list
 
 

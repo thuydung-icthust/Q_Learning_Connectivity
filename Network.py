@@ -49,7 +49,7 @@ class Network:
             for index, node in enumerate(self.node):
                 if index not in request_id and (t - node.check_point[-1]["time"]) > 50:
                     node.set_check_point(t)
-        if optimizer:
+        if optimizer != None:
             self.mc.run(network=self, time_stem=t, optimizer=optimizer, index_f=index_f, file_name = file_name)
         return state
 
@@ -64,7 +64,7 @@ class Network:
 
         t = 0
         cnt_dead = 0
-        while self.node[self.find_min_node()].energy >= 0:
+        while self.node[self.find_min_node()].energy >= 0 and t <= 1000000:
             for node in self.node:
                 node.check_active(self)
             nb_dead = self.count_dead_node()
@@ -74,14 +74,14 @@ class Network:
                 with open(filename_txt, "a+") as f:
                     f.write(data)
                 cnt_dead = nb_dead
-            if(nb_dead >= 0.1 * (len(self.node))):
+            if(nb_dead >= 0.1 * len(self.node)):
                 data = str([t, nb_dead , nb_package, self.mc.energy, self.mc.current,
                             self.node[self.find_min_node()].energy, self.avg_energy()]) + "\n"
                 with open(filename_txt, "a+") as f:
                     f.write(data)
                 break
             t = t + 1
-            if t % 100 == 0:
+            if t % 500 == 0:
                 print(t, self.mc.current, self.node[self.find_min_node()].energy)
                 current_package = self.count_package()
                 if current_package != nb_package:

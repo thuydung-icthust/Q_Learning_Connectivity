@@ -6,9 +6,9 @@ from ast import literal_eval
 from MobileCharger import MobileCharger
 from Q__Learning import Q_learning
 from Inma import Inma
-def Test(file_name = "data/thaydoitileguitin.csv", des_log = "log/", s_ind = 0, e_ind = 5):
+def Test(file_name = "data/thaydoitileguitin.csv", des_log = "log/change_alpha/", size_tt = 2, ord = 0, alpha_p = 0.2, theta_p = 0.2):
 
-    for index in range(2,e_ind):
+    for index in range(1,size_tt):
         df = pd.read_csv(file_name)
         node_pos = list(literal_eval(df.node_pos[index]))
         list_node = []
@@ -26,13 +26,17 @@ def Test(file_name = "data/thaydoitileguitin.csv", des_log = "log/", s_ind = 0, 
         target = [int(item) for item in df.target[index].split(',')]
         net = Network(list_node=list_node,  mc=mc, target=target)
         print(len(net.node), len(net.target), max(net.target))
-        q_learning = Q_learning(network=net)
+        q_learning = Q_learning(network=net, alpha_p = alpha_p, theta_p = theta_p)
         inma = Inma()
-        net.simulate(optimizer= inma, index= index, file_name= des_log)
+        net.simulate(optimizer= q_learning, index= ord, file_name= des_log)
 
 if __name__ == "__main__":
-    filename = ["data/thaydoitileguitin.csv", "data/thaydoisonode.csv", "data/thaydoinangluongmc.csv"]
-    des_log = ["log/Lifetime/INMA/Thaydoitileguitin/", "log/Lifetime/INMA/Thaydoisonode/", "log/Lifetime/PowerMC/"]
-    size_tt = [4, 5, 5]
-    for i in range(0,2):
-        Test(file_name= filename[i], des_log=des_log[i], s_ind=0, e_ind=size_tt[i])
+    # filename = ["data/thaydoitileguitin.csv", "data/thaydoisonode.csv", "data/thaydoinangluongmc.csv"]
+    # des_log = ["log/Lifetime/Frequency/", "log/Lifetime/NodeNum/", "log/Lifetime/PowerMC/"]
+    # size_tt = [4, 6, 5]
+    # for i in range(0,3):
+    #     Test(file_name= filename[i], des_log=des_log[i], size_tt= size_tt[i])
+    alpha_param = [0.1,0.2,0.3,0.4,0.5]
+    theta_param = [0.1,0.2,0.3,0.4,0.5]
+    for i in range(4,5):
+        Test(ord=i, alpha_p = alpha_param[i], theta_p=0.2)
